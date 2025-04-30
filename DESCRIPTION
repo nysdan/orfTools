@@ -1,0 +1,18 @@
+Package: orfTools
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    person("Daniela", "Costa", , "first.last@example.com", role = c("aut", "cre"))
+Description: Identifica ORFs en una secuencia nucleotídica y solapamientos y plotea el mapa génico.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    dplyr,
+    Biostrings,
+    ggplot2,
+    gggenes,
+    tibble,
+    stringr
