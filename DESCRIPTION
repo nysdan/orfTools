@@ -16,3 +16,5 @@ Imports:
     gggenes,
     tibble,
     stringr
+URL: https://github.com/nysdan/orfTools
+BugReports: https://github.com/nysdan/orfTools/issues
