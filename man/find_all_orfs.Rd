@@ -2,16 +2,31 @@
 % Please edit documentation in R/find_all_orfs.R
 \name{find_all_orfs}
 \alias{find_all_orfs}
-\title{Find all ORFs in a genome}
+\title{Find, translate and tabulate all ORFs in a genome}
 \usage{
-find_all_orfs(fasta_file)
+find_all_orfs(fasta_file, min_length = 30, keep_stop_codon = FALSE)
 }
 \arguments{
-\item{fasta_file}{Path to a FASTA file}
+\item{fasta_file}{Path a un archivo FASTA (una o mas secuencias).}
+
+\item{min_length}{Longitud minima del ORF en nucleotidos, se pasa
+directamente a \code{\link[=find_orfs_in_seq]{find_orfs_in_seq()}}. Por defecto 30 (10 codones
+incluyendo el stop).}
+
+\item{keep_stop_codon}{Si es \code{FALSE} (default), elimina el \verb{*} final que
+deja \code{\link[Biostrings:translate]{Biostrings::translate()}} para el codon de stop -- conveniente para
+herramientas rio abajo (p. ej. DeepTMHMM) que esperan una secuencia
+proteica sin caracteres de stop.}
 }
 \value{
-A data frame with predicted ORFs
+Un tibble con una fila por ORF: \code{genome}, \code{ORF} (id que codifica
+genoma, hebra y coordenadas genomicas de inicio/fin), \code{start}, \code{end}
+(1-based; para la hebra \code{-} ya expresadas en coordenadas de la hebra +),
+\code{strand}, \code{frame} (0, 1 o 2), \code{length} (en codones, stop incluido) y
+\code{aa_sequence}.
 }
 \description{
-Find all ORFs in a genome
+Escanea uno o mas registros de un archivo FASTA en los 6 marcos de lectura
+(3 en la hebra +, 3 en la reversa complementaria) usando
+\code{\link[=find_orfs_in_seq]{find_orfs_in_seq()}}, y traduce cada ORF encontrado a proteina.
 }

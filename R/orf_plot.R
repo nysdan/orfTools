@@ -1,17 +1,27 @@
-#' Plot genemap
+#' Plot a gene map of ORFs
+#'
+#' Dibuja un mapa genico de los ORFs de un genoma con `gggenes`, separando
+#' visualmente por hebra (arriba/abajo del eje) y por marco de lectura
+#' (distancia al eje).
+#'
 #' @import ggplot2
 #' @import dplyr
 #' @import gggenes
-#' @param orf_table orf_table
-#' @return ggplot2 object
+#' @param orf_table A data frame con las columnas `start`, `end`, `strand`,
+#'   `frame`, `ORF`, como el devuelto por [find_all_orfs()].
+#' @return Un objeto ggplot2.
 #' @export
-#'
 plot_orfs <- function(orf_table) {
-  orf_plot_data <- orf_table %>%
-    mutate(y = case_when(
-      strand == "+" ~ as.numeric(frame),
-      strand == "-" ~ -as.numeric(frame)
-    ))
+  if (nrow(orf_table) == 0) {
+    stop("orf_table no tiene filas para graficar.", call. = FALSE)
+  }
+
+  orf_plot_data <- mutate(orf_table, y = case_when(
+    strand == "+" & frame == 0 ~ 0.1,
+    strand == "-" & frame == 0 ~ -0.1,
+    strand == "+" & frame != 0 ~ as.numeric(frame),
+    strand == "-" & frame != 0 ~ -as.numeric(frame))
+  )
 
   p <- ggplot(orf_plot_data, aes(
     xmin = start, xmax = end,

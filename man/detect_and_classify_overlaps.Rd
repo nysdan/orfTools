@@ -2,16 +2,22 @@
 % Please edit documentation in R/orf_overlaps.R
 \name{detect_and_classify_overlaps}
 \alias{detect_and_classify_overlaps}
-\title{Detect overlaps}
+\title{Detect and classify overlaps between ORFs}
 \usage{
 detect_and_classify_overlaps(orf_table)
 }
 \arguments{
-\item{orf_table}{orf_table}
+\item{orf_table}{A data frame con (al menos) las columnas \code{ORF}, \code{start},
+\code{end}, \code{strand}, \code{frame}, como el devuelto por \code{\link[=find_all_orfs]{find_all_orfs()}}.}
 }
 \value{
-A data frame with predicted overlapping ORFs
+Un tibble con una fila por par de ORFs solapados (\code{ORF1}, \code{ORF2},
+sus coordenadas, \code{Overlap_bp}, \code{Same_Strand}, \code{Same_Frame},
+\code{Overlap_Type}). Vacio (0 filas) si hay menos de 2 ORFs o ninguno se
+solapa.
 }
 \description{
-Detect overlaps
+Compara todos los pares de ORFs de una tabla y reporta los que se solapan
+en coordenadas genomicas, indicando si comparten hebra/frame y si el
+solapamiento es total (uno anidado dentro del otro) o parcial (terminal).
 }

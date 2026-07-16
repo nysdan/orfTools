@@ -1,20 +1,25 @@
 Package: orfTools
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
-Authors@R: 
-    person("Daniela", "Costa", , "first.last@example.com", role = c("aut", "cre"))
-Description: Identifica ORFs en una secuencia nucleotídica y solapamientos y plotea el mapa génico.
+Title: Find, Translate and Visualize Open Reading Frames in Small Viral Genomes
+Version: 0.1.0
+Authors@R:
+    person("Daniela", "Costa", , "dcosta@pasteur.edu.uy", role = c("aut", "cre"))
+Description: Escanea los 6 marcos de lectura de genomas virales pequenos
+    (p. ej. ssRNA(+) Fiersviridae/Leviviridae), extrae ORFs con codones de
+    inicio ATG/GTG/TTG, los traduce a proteina, detecta y clasifica
+    solapamientos entre ORFs, y grafica el mapa genico resultante.
+    Desarrollado como parte del proyecto SGLS para la identificacion de
+    proteinas Sgl (single gene lysis) putativas.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
-    dplyr,
     Biostrings,
+    dplyr,
     ggplot2,
     gggenes,
     tibble,
-    stringr
+    utils
 URL: https://github.com/nysdan/orfTools
 BugReports: https://github.com/nysdan/orfTools/issues

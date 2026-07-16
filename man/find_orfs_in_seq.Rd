@@ -2,22 +2,35 @@
 % Please edit documentation in R/find_orfs_in_seq.R
 \name{find_orfs_in_seq}
 \alias{find_orfs_in_seq}
-\title{Find seqs of  ORFs in a genome}
+\title{Find ORFs within a single reading frame}
 \usage{
 find_orfs_in_seq(seq, strand, frame_offset, min_length = 30)
 }
 \arguments{
-\item{seq}{A character object}
+\item{seq}{A character string con la secuencia de nucleotidos (una hebra,
+5' -> 3'). Para la hebra reversa, pasar el reverso complementario ya
+calculado (ver \code{\link[=find_all_orfs]{find_all_orfs()}}).}
 
-\item{strand}{strand}
+\item{strand}{\code{"+"} o \code{"-"}. Se usa unicamente para etiquetar los ORFs
+devueltos; la funcion no calcula el reverso complementario.}
 
-\item{frame_offset}{frame offset}
+\item{frame_offset}{Offset del marco de lectura (0, 1 o 2) relativo al
+inicio de \code{seq}.}
 
-\item{min_length}{Minimal ORF length}
+\item{min_length}{Longitud minima del ORF en nucleotidos, incluyendo los
+codones de inicio y de stop.}
 }
 \value{
-A data frame with predicted ORFs
+Una lista de ORFs; cada uno es una lista con \code{start}, \code{end}
+(coordenadas 1-based, inclusive, dentro de \code{seq}), \code{strand}, \code{frame},
+\code{length} (en codones, incluyendo el stop) y \code{sequence} (secuencia
+nucleotidica del ORF).
 }
 \description{
-Find seqs of  ORFs in a genome
+Escanea una secuencia de nucleotidos en un frame de lectura fijo (0, 1 o 2)
+y devuelve, para cada codon de inicio (ATG/GTG/TTG), el primer codon de
+stop en fase que le sigue. Una vez reportado un ORF, la busqueda continua
+despues de su stop: ORFs anidados dentro de uno ya reportado (mismo marco)
+no se listan por separado, ya que se asume traduccion desde el primer start
+disponible.
 }

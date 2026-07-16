@@ -2,16 +2,19 @@
 % Please edit documentation in R/orf_plot.R
 \name{plot_orfs}
 \alias{plot_orfs}
-\title{Plot genemap}
+\title{Plot a gene map of ORFs}
 \usage{
 plot_orfs(orf_table)
 }
 \arguments{
-\item{orf_table}{orf_table}
+\item{orf_table}{A data frame con las columnas \code{start}, \code{end}, \code{strand},
+\code{frame}, \code{ORF}, como el devuelto por \code{\link[=find_all_orfs]{find_all_orfs()}}.}
 }
 \value{
-ggplot2 object
+Un objeto ggplot2.
 }
 \description{
-Plot genemap
+Dibuja un mapa genico de los ORFs de un genoma con \code{gggenes}, separando
+visualmente por hebra (arriba/abajo del eje) y por marco de lectura
+(distancia al eje).
 }
