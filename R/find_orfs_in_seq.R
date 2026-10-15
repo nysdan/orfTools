@@ -2,10 +2,11 @@
 #'
 #' Escanea una secuencia de nucleotidos en un frame de lectura fijo (0, 1 o 2)
 #' y devuelve, para cada codon de inicio (ATG/GTG/TTG), el primer codon de
-#' stop en fase que le sigue. Una vez reportado un ORF, la busqueda continua
-#' despues de su stop: ORFs anidados dentro de uno ya reportado (mismo marco)
-#' no se listan por separado, ya que se asume traduccion desde el primer start
-#' disponible.
+#' stop en fase que le sigue. A diferencia de versiones previas, TODOS los
+#' starts en fase se evaluan independientemente -- multiples ORFs pueden
+#' compartir el mismo stop codon si hay varios starts anidados entre ellos.
+#' Esto es necesario para capturar Sgls expresadas por reinicio ribosomal con
+#' start interno al mismo frame que un gen core mas largo (ver methods_v2.md).
 #'
 #' @param seq A character string con la secuencia de nucleotidos (una hebra,
 #'   5' -> 3'). Para la hebra reversa, pasar el reverso complementario ya
@@ -34,19 +35,15 @@ find_orfs_in_seq <- function(seq, strand, frame_offset, min_length = 30) {
   stop_positions <- which(codons %in% stop_codons)
 
   orfs <- list()
-  k <- 1L
   n_codons <- length(codons)
 
-  while (k <= n_codons) {
-    if (!is_start[k]) {
-      k <- k + 1L
-      next
-    }
+  for (k in seq_len(n_codons)) {
+    if (!is_start[k]) next
 
     # siguiente codon de stop en fase, si existe (busqueda binaria sobre
     # las posiciones de stop, ya ordenadas)
     idx <- findInterval(k, stop_positions) + 1L
-    if (idx > length(stop_positions)) break  # no hay mas stops en este marco
+    if (idx > length(stop_positions)) break  # sin mas stops -> ningun start restante tiene stop
 
     stop_k <- stop_positions[idx]
     i <- codon_starts[k]
@@ -63,8 +60,6 @@ find_orfs_in_seq <- function(seq, strand, frame_offset, min_length = 30) {
         sequence = substr(seq, i, j + 2L)
       )
     }
-
-    k <- stop_k + 1L
   }
 
   orfs

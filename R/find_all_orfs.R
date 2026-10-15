@@ -15,6 +15,11 @@
 #'   deja [Biostrings::translate()] para el codon de stop -- conveniente para
 #'   herramientas rio abajo (p. ej. DeepTMHMM) que esperan una secuencia
 #'   proteica sin caracteres de stop.
+#' @details Codones con bases ambiguas IUPAC (N, R, Y, etc.) se resuelven via
+#'   `translate(..., if.fuzzy.codon = "solve")`: si todas las combinaciones
+#'   posibles del codon ambiguo traducen al mismo aminoacido, se usa ese
+#'   aminoacido; si no, se reporta `X`. Antes de este fix, un codon ambiguo
+#'   hacia fallar translate() y abortaba el procesamiento del genoma completo.
 #' @return Un tibble con una fila por ORF: `genome`, `ORF` (id que codifica
 #'   genoma, hebra y coordenadas genomicas de inicio/fin), `start`, `end`
 #'   (1-based; para la hebra `-` ya expresadas en coordenadas de la hebra +),
@@ -28,7 +33,7 @@ find_all_orfs <- function(fasta_file, min_length = 30, keep_stop_codon = FALSE) 
     orf_seq <- subseq(dna_seq, start = start, end = end)
     if (strand == "-") orf_seq <- reverseComplement(orf_seq)
 
-    aa_seq <- as.character(translate(orf_seq))
+    aa_seq <- as.character(translate(orf_seq, if.fuzzy.codon = "solve"))
     if (!keep_stop_codon) aa_seq <- sub("\\*$", "", aa_seq)
 
     tibble(
