@@ -23,62 +23,90 @@
 #' @return Un tibble con una fila por ORF: `genome`, `ORF` (id que codifica
 #'   genoma, hebra y coordenadas genomicas de inicio/fin), `start`, `end`
 #'   (1-based; para la hebra `-` ya expresadas en coordenadas de la hebra +),
-#'   `strand`, `frame` (0, 1 o 2), `length` (en codones, stop incluido) y
+#'   `strand`, `frame` (0, 1 o 2; en la hebra `+` es `(start - 1) %% 3`, en la
+#'   `-` se mide desde el extremo 3' del genoma, `(longitud - end) %% 3`, y no
+#'   es comparable con el de la `+` ni entre genomas de distinta longitud; para
+#'   marcos relativos usar `Relative_Frame` de
+#'   [detect_and_classify_overlaps()]), `length` (en codones, stop incluido) y
 #'   `aa_sequence`.
 #' @export
 find_all_orfs <- function(fasta_file, min_length = 30, keep_stop_codon = FALSE) {
   seqs <- readDNAStringSet(fasta_file)
 
-  build_row <- function(orf, genome_id, start, end, strand, frame, dna_seq) {
-    orf_seq <- subseq(dna_seq, start = start, end = end)
-    if (strand == "-") orf_seq <- reverseComplement(orf_seq)
+  start_codons <- c("ATG", "GTG", "TTG")
+  stop_codons  <- c("TAA", "TAG", "TGA")
 
-    aa_seq <- as.character(translate(orf_seq, if.fuzzy.codon = "solve"))
-    if (!keep_stop_codon) aa_seq <- sub("\\*$", "", aa_seq)
-
-    tibble(
-      genome = genome_id,
-      ORF = paste0(genome_id, "_ORF_", strand, start, "_", end),
-      start = start,
-      end = end,
-      strand = strand,
-      frame = frame,
-      length = orf$length,
-      aa_sequence = aa_seq
-    )
+  # Coordenadas de los ORFs de una hebra/frame, vectorizado. Misma logica que
+  # find_orfs_in_seq(): todos los starts en fase, cada uno con el primer stop
+  # en fase que le sigue. Devuelve start/end sobre `seq_chr` (hebra ya orientada).
+  orf_coords <- function(seq_chr, frame) {
+    n <- nchar(seq_chr)
+    if (n - 2L < frame + 1L) return(NULL)
+    codon_starts <- seq.int(frame + 1L, n - 2L, by = 3L)
+    codons <- substring(seq_chr, codon_starts, codon_starts + 2L)
+    k <- which(codons %in% start_codons)
+    stop_pos <- which(codons %in% stop_codons)
+    if (length(k) == 0L || length(stop_pos) == 0L) return(NULL)
+    idx <- findInterval(k, stop_pos) + 1L
+    ok <- idx <= length(stop_pos)
+    k <- k[ok]; idx <- idx[ok]
+    i <- codon_starts[k]
+    j <- codon_starts[stop_pos[idx]]
+    keep <- (j + 3L - i) >= min_length
+    if (!any(keep)) return(NULL)
+    list(start = i[keep], end = j[keep] + 2L)
   }
 
   genome_results <- vector("list", length(seqs))
+  orf_dna <- vector("list", length(seqs))
 
-  for (i in seq_along(seqs)) {
-    genome_id <- names(seqs)[i]
-    dna_seq   <- seqs[[i]]
-    seq_len   <- nchar(as.character(dna_seq))
-    fwd_seq   <- as.character(dna_seq)
-    rev_seq   <- as.character(reverseComplement(dna_seq))
+  for (g in seq_along(seqs)) {
+    genome_id <- names(seqs)[g]
+    dna_seq   <- seqs[[g]]
+    contig_len <- length(dna_seq)
+    strand_seq <- list(
+      "+" = as.character(dna_seq),
+      "-" = as.character(reverseComplement(dna_seq))
+    )
 
-    rows <- list()
-
-    for (frame in 0:2) {
-      for (orf in find_orfs_in_seq(fwd_seq, "+", frame, min_length)) {
-        rows[[length(rows) + 1L]] <- build_row(
-          orf, genome_id, orf$start, orf$end, "+", frame, dna_seq
+    parts <- list()
+    dna   <- character()
+    for (strand in c("+", "-")) {
+      for (frame in 0:2) {
+        o <- orf_coords(strand_seq[[strand]], frame)
+        if (is.null(o)) next
+        # ORF ya en orientacion 5'->3' de su hebra (para "-" es el rev. complementario)
+        dna <- c(dna, substring(strand_seq[[strand]], o$start, o$end))
+        if (strand == "-") {
+          real_start <- contig_len - o$end + 1L
+          real_end   <- contig_len - o$start + 1L
+        } else {
+          real_start <- o$start
+          real_end   <- o$end
+        }
+        parts[[length(parts) + 1L]] <- tibble(
+          genome = genome_id,
+          ORF = paste0(genome_id, "_ORF_", strand, real_start, "_", real_end),
+          start = real_start,
+          end = real_end,
+          strand = strand,
+          frame = frame,
+          length = (o$end - o$start + 1L) / 3
         )
       }
     }
-
-    for (frame in 0:2) {
-      for (orf in find_orfs_in_seq(rev_seq, "-", frame, min_length)) {
-        real_start <- seq_len - orf$end + 1L
-        real_end   <- seq_len - orf$start + 1L
-        rows[[length(rows) + 1L]] <- build_row(
-          orf, genome_id, real_start, real_end, "-", frame, dna_seq
-        )
-      }
-    }
-
-    genome_results[[i]] <- if (length(rows) > 0) bind_rows(rows) else NULL
+    genome_results[[g]] <- if (length(parts) > 0) bind_rows(parts) else NULL
+    orf_dna[[g]] <- dna
   }
 
-  bind_rows(genome_results)
+  res <- bind_rows(genome_results)
+  if (nrow(res) == 0L) return(res)
+
+  # Traduccion en un solo bloque: translate(if.fuzzy.codon = "solve") reconstruye
+  # el codigo genetico en cada llamada (~0.1 s), asi que llamarlo por ORF era el
+  # cuello de botella.
+  aa <- as.character(translate(Biostrings::DNAStringSet(unlist(orf_dna)), if.fuzzy.codon = "solve"))
+  if (!keep_stop_codon) aa <- sub("\\*$", "", aa)
+  res$aa_sequence <- unname(aa)
+  res
 }

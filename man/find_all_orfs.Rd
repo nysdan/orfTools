@@ -13,7 +13,7 @@ find_all_orfs(fasta_file, min_length = 30, keep_stop_codon = FALSE)
 directamente a \code{\link[=find_orfs_in_seq]{find_orfs_in_seq()}}. Por defecto 30 (10 codones
 incluyendo el stop).}
 
-\item{keep_stop_codon}{Si es \code{FALSE} (default), elimina el \verb{*} final que
+\item{keep_stop_codon}{Si es \code{FALSE} (default), elimina el \code{*} final que
 deja \code{\link[Biostrings:translate]{Biostrings::translate()}} para el codon de stop -- conveniente para
 herramientas rio abajo (p. ej. DeepTMHMM) que esperan una secuencia
 proteica sin caracteres de stop.}
@@ -22,11 +22,22 @@ proteica sin caracteres de stop.}
 Un tibble con una fila por ORF: \code{genome}, \code{ORF} (id que codifica
 genoma, hebra y coordenadas genomicas de inicio/fin), \code{start}, \code{end}
 (1-based; para la hebra \code{-} ya expresadas en coordenadas de la hebra +),
-\code{strand}, \code{frame} (0, 1 o 2), \code{length} (en codones, stop incluido) y
+\code{strand}, \code{frame} (0, 1 o 2; en la hebra \code{+} es \code{(start - 1) \%\% 3}, en la
+\code{-} se mide desde el extremo 3' del genoma, \code{(longitud - end) \%\% 3}, y no
+es comparable con el de la \code{+} ni entre genomas de distinta longitud; para
+marcos relativos usar \code{Relative_Frame} de
+\code{\link[=detect_and_classify_overlaps]{detect_and_classify_overlaps()}}), \code{length} (en codones, stop incluido) y
 \code{aa_sequence}.
 }
 \description{
 Escanea uno o mas registros de un archivo FASTA en los 6 marcos de lectura
 (3 en la hebra +, 3 en la reversa complementaria) usando
 \code{\link[=find_orfs_in_seq]{find_orfs_in_seq()}}, y traduce cada ORF encontrado a proteina.
+}
+\details{
+Codones con bases ambiguas IUPAC (N, R, Y, etc.) se resuelven via
+\code{translate(..., if.fuzzy.codon = "solve")}: si todas las combinaciones
+posibles del codon ambiguo traducen al mismo aminoacido, se usa ese
+aminoacido; si no, se reporta \code{X}. Antes de este fix, un codon ambiguo
+hacia fallar translate() y abortaba el procesamiento del genoma completo.
 }

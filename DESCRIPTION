@@ -1,6 +1,6 @@
 Package: orfTools
 Title: Find, Translate and Visualize Open Reading Frames in Small Viral Genomes
-Version: 0.2.0
+Version: 0.3.0
 Authors@R:
     person("Daniela", "Costa", , "dcosta@pasteur.edu.uy", role = c("aut", "cre"))
 Description: Escanea los 6 marcos de lectura de genomas virales pequenos

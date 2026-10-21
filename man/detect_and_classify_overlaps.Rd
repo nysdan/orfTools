@@ -13,11 +13,22 @@ detect_and_classify_overlaps(orf_table)
 \value{
 Un tibble con una fila por par de ORFs solapados (\code{ORF1}, \code{ORF2},
 sus coordenadas, \code{Overlap_bp}, \code{Same_Strand}, \code{Same_Frame},
-\code{Overlap_Type}). Vacio (0 filas) si hay menos de 2 ORFs o ninguno se
-solapa.
+\code{Overlap_Type}, \code{Major_ORF} y \code{Relative_Frame}: 0 = mismo marco,
+1 = +1, 2 = +2/-1 del ORF menor respecto de \code{Major_ORF}). Vacio (0 filas)
+si hay menos de 2 ORFs o ninguno se solapa.
 }
 \description{
 Compara todos los pares de ORFs de una tabla y reporta los que se solapan
 en coordenadas genomicas, indicando si comparten hebra/frame y si el
 solapamiento es total (uno anidado dentro del otro) o parcial (terminal).
+}
+\details{
+El marco relativo se calcula respecto del ORF mas largo del par
+(\code{Major_ORF}; en caso de empate, \code{ORF1}), en el sentido de lectura de la
+hebra: \code{(start_candidato - start_mayor) \%\% 3} en la hebra \code{+} y
+\code{(end_mayor - end_candidato) \%\% 3} en la hebra \code{-} (coordenadas de la
+hebra +). No se usa la columna \code{frame} porque en la hebra \code{-} se mide
+desde el extremo 3' del genoma (depende de \code{longitud \%\% 3}). Para pares en
+hebras opuestas no hay relacion de marco definida: \code{Same_Frame} y
+\code{Relative_Frame} son \code{NA}.
 }

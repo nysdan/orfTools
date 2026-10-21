@@ -29,8 +29,9 @@ nucleotidica del ORF).
 \description{
 Escanea una secuencia de nucleotidos en un frame de lectura fijo (0, 1 o 2)
 y devuelve, para cada codon de inicio (ATG/GTG/TTG), el primer codon de
-stop en fase que le sigue. Una vez reportado un ORF, la busqueda continua
-despues de su stop: ORFs anidados dentro de uno ya reportado (mismo marco)
-no se listan por separado, ya que se asume traduccion desde el primer start
-disponible.
+stop en fase que le sigue. A diferencia de versiones previas, TODOS los
+starts en fase se evaluan independientemente -- multiples ORFs pueden
+compartir el mismo stop codon si hay varios starts anidados entre ellos.
+Esto es necesario para capturar Sgls expresadas por reinicio ribosomal con
+start interno al mismo frame que un gen core mas largo (ver methods_v2.md).
 }
